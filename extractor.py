@@ -36,10 +36,8 @@ def extract_luau_scripts(rbxmx_path: str | Path, output_dir: str | Path = None) 
         else:
             output_dir = rbxmx_path.stem
 
-    # Resolve to an absolute path so we know exactly where it's trying to save
     base_path = Path(output_dir).resolve()
 
-    # Create the base folder FIRST to catch permission errors early
     try:
         base_path.mkdir(parents=True, exist_ok=True)
     except PermissionError:
