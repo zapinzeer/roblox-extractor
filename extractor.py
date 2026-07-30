@@ -42,10 +42,6 @@ def extract_luau_scripts(rbxmx_path: str | Path, output_dir: str | Path = None) 
         base_path.mkdir(parents=True, exist_ok=True)
     except PermissionError:
         print(f"\n[!] Permission Denied: Windows blocked the script from creating folders at:\n    {base_path}")
-        print("\nFixes:")
-        print(" 1. Check if a FILE (not a folder) named exactly that already exists and delete it.")
-        print(" 2. Windows Defender 'Controlled Folder Access' might be blocking Python.")
-        print(" 3. Try providing a specific output path like: -o C:\\Users\\lz4\\Downloads\\Extracted")
         sys.exit(1)
     except Exception as e:
         print(f"\n[!] Failed to create output directory: {e}")
