@@ -44,6 +44,8 @@ def extract_luau_scripts(
 
     base_path = resolve_output_dir(input_file, roots, output_dir)
     planned = Planner(ext=ext, rojo_format=rojo_format).plan_roots(roots)
+    if not planned:
+        return ExtractionResult(base_path, 0)
 
     written = 0
     try:
