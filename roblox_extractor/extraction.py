@@ -71,11 +71,7 @@ def _describe_conflicts(base_path: Path, conflicts: list[Path], limit: int = 5) 
     shown = "\n".join(f"  {path}" for path in conflicts[:limit])
     if len(conflicts) > limit:
         shown += f"\n  ... and {len(conflicts) - limit} more"
-    return (
-        f"{len(conflicts)} file(s) in '{base_path}' would be overwritten:\n"
-        f"{shown}\n"
-        "Pass --force to overwrite them, or -o DIR to write somewhere else."
-    )
+    return f"{len(conflicts)} file(s) in '{base_path}' would be overwritten:\n{shown}"
 
 
 def extract_luau_scripts(
