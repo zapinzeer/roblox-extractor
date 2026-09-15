@@ -13,14 +13,40 @@ FORCE_HINT = "Pass --force to overwrite them, or -o DIR to write somewhere else.
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("file", nargs="?", default=None)
-    parser.add_argument("-i", "--input", dest="input_flag", default=None)
-    parser.add_argument("-o", "--output", default=None)
-    parser.add_argument("--ext", default="luau", choices=["luau", "lua"])
-    parser.add_argument("--standard", action="store_true")
-    parser.add_argument("-f", "--force", action="store_true")
-    parser.add_argument("-q", "--quiet", action="store_true")
+    parser = argparse.ArgumentParser(
+        prog="extractor",
+        description=(
+            "Extract Luau scripts from a Roblox XML model (.rbxmx) or place "
+            "(.rbxlx) file into a Rojo-compatible source tree. Run with no "
+            "arguments to be asked for the paths instead."
+        ),
+    )
+    parser.add_argument(
+        "file", nargs="?", default=None,
+        help="the .rbxmx / .rbxlx file to read",
+    )
+    parser.add_argument(
+        "-i", "--input", dest="input_flag", default=None, metavar="FILE",
+        help="another way to give the input file",
+    )
+    parser.add_argument(
+        "-o", "--output", default=None, metavar="DIR",
+        help="where to write (default: a folder named after the model or place)",
+    )
+    parser.add_argument(
+        "--ext", default="luau", choices=["luau", "lua"],
+        help="extension for extracted scripts (default: %(default)s)",
+    )
+    parser.add_argument(
+        "--standard", action="store_true",
+        help="write a flat layout instead of Rojo init files",
+    )
+    parser.add_argument(
+        "-f", "--force", action="store_true",
+        help="overwrite files that already exist in the output directory",
+    )
+    parser.add_argument("-q", "--quiet", action="store_true", help="only report errors")
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     return parser
 
 
