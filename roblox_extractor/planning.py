@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Optional
 
 from .model import ScriptNode
-from .naming import sanitize_filename
+from .naming import fit_to_byte_limit, sanitize_filename
 from .suffixes import script_suffix
 
 
@@ -87,7 +87,9 @@ class Planner:
     ) -> str:
         index = 1
         while True:
-            stem = base_name if index == 1 else f"{base_name}_{index}"
+            tag = "" if index == 1 else f"_{index}"
+            reserved = len(tag.encode("utf-8")) + len((suffix or "").encode("utf-8"))
+            stem = fit_to_byte_limit(base_name, reserved) + tag
             keys = []
             if suffix is not None:
                 keys.append(_claim_key(directory / f"{stem}{suffix}"))

@@ -9,16 +9,29 @@ WINDOWS_RESERVED = frozenset({
 })
 ILLEGAL_CHARS = re.compile(r'[\x00-\x1f\\/*?:"<>|]')
 
+MAX_FILENAME_BYTES = 255
+
 
 def sanitize_filename(name: str, fallback: str = "Unnamed") -> str:
-    if not name or not any(c not in '\\/*?:"<>| . ' and ord(c) >= 32 for c in name):
-        return fallback
-    sanitized = ILLEGAL_CHARS.sub("_", name.strip()).strip(". ")[:255].rstrip(". ")
+    sanitized = ILLEGAL_CHARS.sub("_", name or "").strip(". ")
     if not sanitized:
         return fallback
     if sanitized.split(".")[0].upper() in WINDOWS_RESERVED:
         sanitized = f"_{sanitized}"
     return sanitized
+
+
+def fit_to_byte_limit(
+    text: str,
+    reserved: int = 0,
+    limit: int = MAX_FILENAME_BYTES,
+) -> str:
+    budget = max(limit - reserved, 1)
+    encoded = text.encode("utf-8")
+    if len(encoded) <= budget:
+        return text
+    trimmed = encoded[:budget].decode("utf-8", errors="ignore").rstrip(" .")
+    return trimmed or "_"
 
 
 def normalize_source(source: str) -> str:
