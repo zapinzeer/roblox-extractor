@@ -18,19 +18,25 @@ TOP_SERVICES = frozenset({
 PathLike = Union[str, Path]
 
 
+def _looks_like_place(input_file: Path, roots: list[ScriptNode]) -> bool:
+    return input_file.suffix.lower() == ".rbxlx" or any(
+        r.class_name in TOP_SERVICES for r in roots
+    )
+
+
 def resolve_output_dir(
     input_file: Path,
     roots: list[ScriptNode],
     output_dir: Optional[PathLike],
-) -> Path:
+) -> tuple[Path, bool]:
     if output_dir:
-        return Path(output_dir).resolve()
-    is_place = input_file.suffix.lower() == ".rbxlx" or any(
-        r.class_name in TOP_SERVICES for r in roots
-    )
-    if is_place or len(roots) != 1:
-        return Path(input_file.stem).resolve()
-    return Path(sanitize_filename(roots[0].name, fallback=input_file.stem)).resolve()
+        return Path(output_dir).resolve(), False
+
+    fallback = sanitize_filename(input_file.stem, fallback="extracted")
+    if _looks_like_place(input_file, roots) or len(roots) != 1:
+        return Path(fallback).resolve(), False
+
+    return Path(sanitize_filename(roots[0].name, fallback=fallback)).resolve(), True
 
 
 def extract_luau_scripts(
@@ -43,8 +49,8 @@ def extract_luau_scripts(
     input_file = Path(rbxmx_path).resolve()
     roots = parse_rbx_xml(input_file, warn=warn)
 
-    base_path = resolve_output_dir(input_file, roots, output_dir)
-    planned = Planner(ext=ext, rojo_format=rojo_format).plan_roots(roots)
+    base_path, unwrap = resolve_output_dir(input_file, roots, output_dir)
+    planned = Planner(ext=ext, rojo_format=rojo_format).plan_roots(roots, unwrap=unwrap)
     if not planned:
         return ExtractionResult(base_path, 0)
 

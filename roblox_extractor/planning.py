@@ -16,11 +16,12 @@ class Planner:
         self.planned: list[tuple[ScriptNode, Path]] = []
         self.claimed: set[str] = set()
 
-    def plan_roots(self, roots: list[ScriptNode]) -> list[tuple[ScriptNode, Path]]:
-        single_unwrap = len(roots) == 1 and (
-            not roots[0].is_script or bool(roots[0].children)
-        )
-        if single_unwrap:
+    def plan_roots(
+        self,
+        roots: list[ScriptNode],
+        unwrap: bool = False,
+    ) -> list[tuple[ScriptNode, Path]]:
+        if unwrap:
             self._plan_single_root(roots[0])
         else:
             container = ScriptNode("Folder")
@@ -51,7 +52,7 @@ class Planner:
             suffix = script_suffix(root.class_name, root.run_context, self.ext)
             stem = self._claim(base, sanitize_filename(root.name), suffix=suffix)
             self.planned.append((root, base / f"{stem}{suffix}"))
-            self.plan_tree(root, Path(stem))
+            self.plan_tree(root, base)
 
     def _place(self, node: ScriptNode, directory: Path) -> Optional[Path]:
         has_children = bool(node.children)
