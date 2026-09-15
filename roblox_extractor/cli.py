@@ -50,6 +50,17 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def use_replacement_on_unencodable_output() -> None:
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is None:
+            continue
+        try:
+            reconfigure(errors="backslashreplace")
+        except (ValueError, OSError):
+            pass
+
+
 def _read_path(prompt: str) -> Optional[str]:
     try:
         raw = input(prompt)
@@ -134,6 +145,7 @@ def run_interactive(args: argparse.Namespace) -> int:
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
+    use_replacement_on_unencodable_output()
     args = build_parser().parse_args(argv)
 
     target = args.file or args.input_flag
