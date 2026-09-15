@@ -6,6 +6,7 @@ from typing import Optional, Sequence
 
 from .errors import ExtractorError
 from .extraction import extract_luau_scripts
+from .parsing import warn_to_stderr
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -33,7 +34,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     try:
         result = extract_luau_scripts(
-            target, args.output, ext=args.ext, rojo_format=not args.standard
+            target,
+            args.output,
+            ext=args.ext,
+            rojo_format=not args.standard,
+            warn=(lambda message: None) if args.quiet else warn_to_stderr,
         )
     except ExtractorError as exc:
         print(f"error: {exc}", file=sys.stderr)

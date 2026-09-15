@@ -20,7 +20,10 @@ class RunContext(enum.Enum):
 
 
 class ScriptNode:
-    __slots__ = ("class_name", "name", "source", "run_context", "children", "is_script")
+    __slots__ = (
+        "class_name", "name", "source", "run_context",
+        "children", "is_script", "shared_source_key",
+    )
 
     def __init__(self, class_name: str):
         self.class_name = class_name
@@ -29,6 +32,7 @@ class ScriptNode:
         self.run_context = RunContext.LEGACY
         self.children: list[ScriptNode] = []
         self.is_script = class_name in SCRIPT_CLASSES
+        self.shared_source_key: Optional[str] = None
 
     def has_script_descendant(self) -> bool:
         for c in self.children:

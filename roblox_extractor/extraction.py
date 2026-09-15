@@ -6,7 +6,7 @@ from typing import Optional, Union
 from .errors import ExtractorError
 from .model import ExtractionResult, ScriptNode
 from .naming import normalize_source, sanitize_filename
-from .parsing import parse_rbx_xml
+from .parsing import Warn, parse_rbx_xml, warn_to_stderr
 from .planning import Planner
 
 TOP_SERVICES = frozenset({
@@ -38,9 +38,10 @@ def extract_luau_scripts(
     output_dir: Optional[PathLike] = None,
     ext: str = "luau",
     rojo_format: bool = True,
+    warn: Warn = warn_to_stderr,
 ) -> ExtractionResult:
     input_file = Path(rbxmx_path).resolve()
-    roots = parse_rbx_xml(input_file)
+    roots = parse_rbx_xml(input_file, warn=warn)
 
     base_path = resolve_output_dir(input_file, roots, output_dir)
     planned = Planner(ext=ext, rojo_format=rojo_format).plan_roots(roots)
