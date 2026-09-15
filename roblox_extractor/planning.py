@@ -56,8 +56,9 @@ class Planner:
         if single_unwrap:
             self._plan_single_root(roots[0])
         else:
-            for r in roots:
-                self._plan_root(r)
+            container = ScriptNode("Folder")
+            container.children = list(roots)
+            self.plan_tree(container, Path("."))
         return self.planned
 
     def _plan_single_root(self, root: ScriptNode) -> None:
@@ -75,21 +76,3 @@ class Planner:
             self.planned.append((root, target))
             self.registered_paths.add(target)
             self.plan_tree(root, Path(name))
-
-    def _plan_root(self, root: ScriptNode) -> None:
-        r_name = sanitize_filename(root.name)
-        has_children = bool(root.children)
-        if not root.is_script:
-            self.plan_tree(root, Path(r_name))
-            return
-        if self.rojo_format and has_children:
-            target = Path(r_name) / script_suffix(root.class_name, root.run_context, self.ext, init=True)
-            self.planned.append((root, target))
-            self.registered_paths.add(target)
-            self.plan_tree(root, target.parent)
-        else:
-            target = Path(f"{r_name}{script_suffix(root.class_name, root.run_context, self.ext)}")
-            self.planned.append((root, target))
-            self.registered_paths.add(target)
-            if has_children:
-                self.plan_tree(root, Path(r_name))
