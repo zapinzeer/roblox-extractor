@@ -34,12 +34,6 @@ class ScriptNode:
         self.is_script = class_name in SCRIPT_CLASSES
         self.shared_source_key: Optional[str] = None
 
-    def has_script_descendant(self) -> bool:
-        for c in self.children:
-            if c.is_script or c.has_script_descendant():
-                return True
-        return False
-
 
 class ExtractionResult(NamedTuple):
     output_dir: Path

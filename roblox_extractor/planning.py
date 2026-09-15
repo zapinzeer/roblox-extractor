@@ -17,9 +17,6 @@ class Planner:
     def plan_tree(self, node: ScriptNode, current_dir: Path) -> None:
         used_names: set[str] = set()
         for child in node.children:
-            if not (child.is_script or child.has_script_descendant()):
-                continue
-
             raw_name = sanitize_filename(child.name)
             candidate = raw_name
             idx = 2
@@ -28,7 +25,7 @@ class Planner:
                 idx += 1
             used_names.add(candidate.lower())
 
-            has_children = any(c.is_script or c.has_script_descendant() for c in child.children)
+            has_children = bool(child.children)
 
             if child.is_script:
                 if self.rojo_format and has_children:
@@ -54,8 +51,7 @@ class Planner:
 
     def plan_roots(self, roots: list[ScriptNode]) -> list[tuple[ScriptNode, Path]]:
         single_unwrap = len(roots) == 1 and (
-            not roots[0].is_script
-            or any(c.is_script or c.has_script_descendant() for c in roots[0].children)
+            not roots[0].is_script or bool(roots[0].children)
         )
         if single_unwrap:
             self._plan_single_root(roots[0])
@@ -81,10 +77,8 @@ class Planner:
             self.plan_tree(root, Path(name))
 
     def _plan_root(self, root: ScriptNode) -> None:
-        if not (root.is_script or root.has_script_descendant()):
-            return
         r_name = sanitize_filename(root.name)
-        has_children = any(c.is_script or c.has_script_descendant() for c in root.children)
+        has_children = bool(root.children)
         if not root.is_script:
             self.plan_tree(root, Path(r_name))
             return

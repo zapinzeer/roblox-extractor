@@ -9,8 +9,6 @@ from typing import Callable, Sequence
 
 from .errors import BinaryFormatError, ExtractorError
 from .model import ScriptNode, RunContext
-from .naming import sanitize_filename
-
 TEXT_PROPERTY_TAGS = frozenset({"string", "ProtectedString"})
 
 Warn = Callable[[str], None]
@@ -60,17 +58,6 @@ def _resolve_shared_sources(
             node.source = base64.b64decode(encoded).decode("utf-8", errors="replace")
         except (binascii.Error, ValueError) as exc:
             warn(f"'{node.name}' has an undecodable shared source ({exc}); its source is empty.")
-
-
-def get_item_name(item: ET.Element) -> str:
-    props = item.find("Properties")
-    if props is not None:
-        name_tag = props.find("string[@name='Name']")
-        if name_tag is not None and name_tag.text:
-            cleaned = name_tag.text.strip()
-            if cleaned:
-                return sanitize_filename(cleaned)
-    return f"Unnamed_{item.attrib.get('class', 'Item')}"
 
 
 def parse_rbx_xml(file_path: Path, warn: Warn = warn_to_stderr) -> list[ScriptNode]:
