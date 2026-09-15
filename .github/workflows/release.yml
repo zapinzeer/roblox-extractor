@@ -1,0 +1,59 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            artifact: roblox-extractor-windows-x86_64.exe
+            built: dist/roblox-extractor.exe
+          - os: ubuntu-latest
+            artifact: roblox-extractor-linux-x86_64
+            built: dist/roblox-extractor
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - run: pip install pyinstaller
+
+      - run: pyinstaller --onefile --console --name roblox-extractor extractor.py
+
+      - name: Check the binary runs
+        run: |
+          ${{ matrix.built }} --version
+          ${{ matrix.built }} --help
+
+      - name: Rename for the release
+        shell: bash
+        run: mv "${{ matrix.built }}" "${{ matrix.artifact }}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.artifact }}
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: roblox-extractor-*
