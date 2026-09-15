@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Optional, Union
 
 from .errors import ExtractorError
-from .model import ScriptNode
+from .model import ExtractionResult, ScriptNode
 from .naming import normalize_source, sanitize_filename
 from .parsing import parse_rbx_xml
 from .planning import Planner
@@ -38,13 +38,14 @@ def extract_luau_scripts(
     output_dir: Optional[PathLike] = None,
     ext: str = "luau",
     rojo_format: bool = True,
-) -> int:
+) -> ExtractionResult:
     input_file = Path(rbxmx_path).resolve()
     roots = parse_rbx_xml(input_file)
 
     base_path = resolve_output_dir(input_file, roots, output_dir)
     planned = Planner(ext=ext, rojo_format=rojo_format).plan_roots(roots)
 
+    written = 0
     try:
         base_path.mkdir(parents=True, exist_ok=True)
         for node, rel_path in planned:
@@ -52,7 +53,8 @@ def extract_luau_scripts(
             dest.parent.mkdir(parents=True, exist_ok=True)
             with open(dest, "w", encoding="utf-8", newline="\n") as f:
                 f.write(normalize_source(node.source))
+            written += 1
     except OSError as exc:
         raise ExtractorError(f"Could not write to '{base_path}': {exc}") from exc
 
-    return len(planned)
+    return ExtractionResult(base_path, written)

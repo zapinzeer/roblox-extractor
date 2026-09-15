@@ -15,6 +15,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("-o", "--output", default=None)
     parser.add_argument("--ext", default="luau", choices=["luau", "lua"])
     parser.add_argument("--standard", action="store_true")
+    parser.add_argument("-q", "--quiet", action="store_true")
     return parser
 
 
@@ -31,9 +32,17 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             return 1
 
     try:
-        extract_luau_scripts(target, args.output, ext=args.ext, rojo_format=not args.standard)
+        result = extract_luau_scripts(
+            target, args.output, ext=args.ext, rojo_format=not args.standard
+        )
     except ExtractorError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
 
+    if not args.quiet:
+        if result.script_count:
+            plural = "" if result.script_count == 1 else "s"
+            print(f"Extracted {result.script_count} script{plural} to {result.output_dir}")
+        else:
+            print(f"No scripts found in {target}")
     return 0

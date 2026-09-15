@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import enum
-from typing import Optional
+from pathlib import Path
+from typing import NamedTuple, Optional
 
 SCRIPT_CLASSES = frozenset({"Script", "LocalScript", "ModuleScript"})
 
@@ -34,3 +35,8 @@ class ScriptNode:
             if c.is_script or c.has_script_descendant():
                 return True
         return False
+
+
+class ExtractionResult(NamedTuple):
+    output_dir: Path
+    script_count: int
