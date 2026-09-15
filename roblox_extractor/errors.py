@@ -7,3 +7,7 @@ class ExtractorError(Exception):
 
 class BinaryFormatError(ExtractorError):
     pass
+
+
+class OutputConflictError(ExtractorError):
+    pass

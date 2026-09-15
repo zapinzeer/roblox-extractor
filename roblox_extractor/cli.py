@@ -16,6 +16,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("-o", "--output", default=None)
     parser.add_argument("--ext", default="luau", choices=["luau", "lua"])
     parser.add_argument("--standard", action="store_true")
+    parser.add_argument("-f", "--force", action="store_true")
     parser.add_argument("-q", "--quiet", action="store_true")
     return parser
 
@@ -38,6 +39,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             args.output,
             ext=args.ext,
             rojo_format=not args.standard,
+            force=args.force,
             warn=(lambda message: None) if args.quiet else warn_to_stderr,
         )
     except ExtractorError as exc:

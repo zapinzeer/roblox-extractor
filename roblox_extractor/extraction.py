@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional, Union
 
-from .errors import ExtractorError
+from .errors import ExtractorError, OutputConflictError
 from .model import ExtractionResult, ScriptNode
 from .naming import normalize_source, sanitize_filename
 from .parsing import Warn, parse_rbx_xml, warn_to_stderr
@@ -39,11 +39,51 @@ def resolve_output_dir(
     return Path(sanitize_filename(roots[0].name, fallback=fallback)).resolve(), True
 
 
+def _exists(path: Path) -> bool:
+    try:
+        return path.exists()
+    except OSError:
+        return False
+
+
+def find_conflicts(base_path: Path, planned: list[tuple[ScriptNode, Path]]) -> list[Path]:
+    conflicts: list[Path] = []
+    seen: set[Path] = set()
+
+    for _, rel_path in planned:
+        destination = base_path / rel_path
+        if destination not in seen:
+            seen.add(destination)
+            if _exists(destination):
+                conflicts.append(destination)
+
+        for parent in destination.parents:
+            if parent == base_path or parent in seen:
+                break
+            seen.add(parent)
+            if _exists(parent) and not parent.is_dir():
+                conflicts.append(parent)
+
+    return conflicts
+
+
+def _describe_conflicts(base_path: Path, conflicts: list[Path], limit: int = 5) -> str:
+    shown = "\n".join(f"  {path}" for path in conflicts[:limit])
+    if len(conflicts) > limit:
+        shown += f"\n  ... and {len(conflicts) - limit} more"
+    return (
+        f"{len(conflicts)} file(s) in '{base_path}' would be overwritten:\n"
+        f"{shown}\n"
+        "Pass --force to overwrite them, or -o DIR to write somewhere else."
+    )
+
+
 def extract_luau_scripts(
     rbxmx_path: PathLike,
     output_dir: Optional[PathLike] = None,
     ext: str = "luau",
     rojo_format: bool = True,
+    force: bool = False,
     warn: Warn = warn_to_stderr,
 ) -> ExtractionResult:
     input_file = Path(rbxmx_path).resolve()
@@ -53,6 +93,11 @@ def extract_luau_scripts(
     planned = Planner(ext=ext, rojo_format=rojo_format).plan_roots(roots, unwrap=unwrap)
     if not planned:
         return ExtractionResult(base_path, 0)
+
+    if not force:
+        conflicts = find_conflicts(base_path, planned)
+        if conflicts:
+            raise OutputConflictError(_describe_conflicts(base_path, conflicts))
 
     written = 0
     try:
