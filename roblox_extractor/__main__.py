@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from roblox_extractor.cli import main
+from .cli import main
 
 if __name__ == "__main__":
     main()
