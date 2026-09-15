@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import deque
 from pathlib import Path
 from typing import Optional
 
@@ -28,10 +29,13 @@ class Planner:
         return self.planned
 
     def plan_tree(self, node: ScriptNode, current_dir: Path) -> None:
-        for child in node.children:
-            child_dir = self._place(child, current_dir)
-            if child_dir is not None:
-                self.plan_tree(child, child_dir)
+        queue: "deque[tuple[ScriptNode, Path]]" = deque([(node, current_dir)])
+        while queue:
+            parent, directory = queue.popleft()
+            for child in parent.children:
+                child_dir = self._place(child, directory)
+                if child_dir is not None:
+                    queue.append((child, child_dir))
 
     def _plan_single_root(self, root: ScriptNode) -> None:
         base = Path(".")
