@@ -3,27 +3,25 @@ from __future__ import annotations
 from .model import RunContext
 
 
-def get_script_ext(class_name: str, run_context: RunContext, ext: str = "luau") -> str:
+def script_suffix(
+    class_name: str,
+    run_context: RunContext,
+    ext: str = "luau",
+    *,
+    init: bool = False,
+) -> str:
     ext = ext.lstrip(".")
     if class_name == "Script":
-        if run_context == RunContext.CLIENT:
-            return f".client.{ext}"
-        if run_context == RunContext.PLUGIN:
-            return f".plugin.{ext}"
-        return f".server.{ext}"
-    if class_name == "LocalScript":
-        return f".client.{ext}"
-    return f".{ext}"
+        if run_context is RunContext.CLIENT:
+            kind = "client"
+        elif run_context is RunContext.PLUGIN:
+            kind = "plugin"
+        else:
+            kind = "server"
+    elif class_name == "LocalScript":
+        kind = "client"
+    else:
+        kind = None
 
-
-def get_init_filename(class_name: str, run_context: RunContext, ext: str = "luau") -> str:
-    ext = ext.lstrip(".")
-    if class_name == "Script":
-        if run_context == RunContext.CLIENT:
-            return f"init.client.{ext}"
-        if run_context == RunContext.PLUGIN:
-            return f"init.plugin.{ext}"
-        return f"init.server.{ext}"
-    if class_name == "LocalScript":
-        return f"init.client.{ext}"
-    return f"init.{ext}"
+    suffix = "." + ".".join(part for part in (kind, ext) if part)
+    return f"init{suffix}" if init else suffix

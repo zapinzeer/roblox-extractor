@@ -4,7 +4,7 @@ from pathlib import Path
 
 from .model import ScriptNode
 from .naming import sanitize_filename
-from .suffixes import get_init_filename, get_script_ext
+from .suffixes import script_suffix
 
 
 class Planner:
@@ -29,15 +29,15 @@ class Planner:
 
             if child.is_script:
                 if self.rojo_format and has_children:
-                    target = current_dir / candidate / get_init_filename(child.class_name, child.run_context, self.ext)
+                    target = current_dir / candidate / script_suffix(child.class_name, child.run_context, self.ext, init=True)
                     while target in self.registered_paths:
                         candidate = f"{candidate}_{idx}"
-                        target = current_dir / candidate / get_init_filename(child.class_name, child.run_context, self.ext)
+                        target = current_dir / candidate / script_suffix(child.class_name, child.run_context, self.ext, init=True)
                     self.registered_paths.add(target)
                     self.planned.append((child, target))
                     self.plan_tree(child, target.parent)
                 else:
-                    file_ext = get_script_ext(child.class_name, child.run_context, self.ext)
+                    file_ext = script_suffix(child.class_name, child.run_context, self.ext)
                     target = current_dir / f"{candidate}{file_ext}"
                     while target in self.registered_paths:
                         candidate = f"{candidate}_{idx}"
@@ -65,13 +65,13 @@ class Planner:
             self.plan_tree(root, Path("."))
             return
         if self.rojo_format:
-            target = Path(get_init_filename(root.class_name, root.run_context, self.ext))
+            target = Path(script_suffix(root.class_name, root.run_context, self.ext, init=True))
             self.planned.append((root, target))
             self.registered_paths.add(target)
             self.plan_tree(root, Path("."))
         else:
             name = sanitize_filename(root.name)
-            target = Path(f"{name}{get_script_ext(root.class_name, root.run_context, self.ext)}")
+            target = Path(f"{name}{script_suffix(root.class_name, root.run_context, self.ext)}")
             self.planned.append((root, target))
             self.registered_paths.add(target)
             self.plan_tree(root, Path(name))
@@ -83,12 +83,12 @@ class Planner:
             self.plan_tree(root, Path(r_name))
             return
         if self.rojo_format and has_children:
-            target = Path(r_name) / get_init_filename(root.class_name, root.run_context, self.ext)
+            target = Path(r_name) / script_suffix(root.class_name, root.run_context, self.ext, init=True)
             self.planned.append((root, target))
             self.registered_paths.add(target)
             self.plan_tree(root, target.parent)
         else:
-            target = Path(f"{r_name}{get_script_ext(root.class_name, root.run_context, self.ext)}")
+            target = Path(f"{r_name}{script_suffix(root.class_name, root.run_context, self.ext)}")
             self.planned.append((root, target))
             self.registered_paths.add(target)
             if has_children:
