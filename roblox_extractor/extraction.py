@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional, Union
 
+from .errors import ExtractorError
 from .model import ScriptNode
 from .naming import normalize_source, sanitize_filename
 from .parsing import parse_rbx_xml
@@ -42,14 +43,16 @@ def extract_luau_scripts(
     roots = parse_rbx_xml(input_file)
 
     base_path = resolve_output_dir(input_file, roots, output_dir)
-    base_path.mkdir(parents=True, exist_ok=True)
-
     planned = Planner(ext=ext, rojo_format=rojo_format).plan_roots(roots)
 
-    for node, rel_path in planned:
-        dest = base_path / rel_path
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        with open(dest, "w", encoding="utf-8", newline="\n") as f:
-            f.write(normalize_source(node.source))
+    try:
+        base_path.mkdir(parents=True, exist_ok=True)
+        for node, rel_path in planned:
+            dest = base_path / rel_path
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            with open(dest, "w", encoding="utf-8", newline="\n") as f:
+                f.write(normalize_source(node.source))
+    except OSError as exc:
+        raise ExtractorError(f"Could not write to '{base_path}': {exc}") from exc
 
     return len(planned)
